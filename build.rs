@@ -48,7 +48,12 @@ pub fn find_executable(name: &str) -> Option<PathBuf> {
     let cmd = Command::new(WHICH).arg(name).output().ok()?;
     if cmd.status.success() {
         let stdout = String::from_utf8_lossy(&cmd.stdout);
-        Some(stdout.trim().into())
+        stdout
+            .trim()
+            .replace("\r", "")
+            .split("\n")
+            .next()
+            .map(Into::into)
     } else {
         None
     }
@@ -293,6 +298,8 @@ fn main() -> Result<()> {
     }
 
     let php = find_php()?;
+    eprintln!("Found PHP executable at {}", php.as_os_str().to_str().unwrap_or(""));
+    
     let info = PHPInfo::get(&php)?;
     let provider = Provider::new(&info)?;
 
